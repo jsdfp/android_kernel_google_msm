@@ -905,7 +905,7 @@ static void update_power_source(void){
 	if (power_source == SLIM_HDMI_MODE) {
 		elan_ktf3k_ts_set_power_source(private_ts->client, HDMI_POWER_SOURCE_CMD);
 	} else {
-		elan_ktf3k_ts_set_power_source(private_ts->client, power_source != USB_NO_Cable);
+		elan_ktf3k_ts_set_power_source(private_ts->client, 1);
 	}
 }
 
@@ -1655,6 +1655,7 @@ static int elan_ktf3k_ts_probe(struct i2c_client *client,
     touch_debug(DEBUG_INFO, "[ELAN]misc_register finished!!");	
 
   update_power_source();
+  elan_ktf3k_ts_rough_calibrate(client);
   return 0;
 
 err_input_register_device_failed:
@@ -1724,8 +1725,10 @@ static int elan_ktf3k_ts_suspend(struct i2c_client *client, pm_message_t mesg)
 	if (rc)
 		enable_irq(client->irq);
 
-	if(work_lock == 0)
+	if(work_lock == 0) {
+	    rc = elan_ktf3k_ts_rough_calibrate(client);
 	    rc = elan_ktf3k_ts_set_power_state(client, PWR_STATE_DEEP_SLEEP);
+	}
 
 	return 0;
 }
